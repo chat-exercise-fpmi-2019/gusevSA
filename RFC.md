@@ -1,12 +1,12 @@
 ## Main design decisions (in development)
 #### Underlying protocol
-TCP
+- TCP
 #### Usage of existing protocols
-HTTP-based
+- HTTP-based
 #### Message delimiting for simple protocols
-Fixed size messages
+- Fixed size messages
 #### Valid username options
-Numbers
-Letters
+- Numbers
+- Letters
 #### Command replies
-Error codes (200 OK, 400 Failed, etc.)
+- Error codes (200 OK, 400 Failed, etc.)
