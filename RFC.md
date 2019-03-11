@@ -1,29 +1,29 @@
 # Chat protocol -- CP/0.0.0
 
-### Status of this Memo
+# Status of this Memo
 In production
 
-### Purpose
+# Purpose
 This document specifies a chat protocol for the 13 group FAMCS BSU
 
-### Terminology
+# Terminology
 
 
-### General overview
-#### System description
+# General overview
+## System description
 The system API based on REST API.
 The system is an immediate chat. It consists server and client.
 
-#### Available commands 
-##### Client
+## Available commands 
+### Client
 - Set username
 - Send private message
 - Send broadcast message
 
-##### Server
+### Server
 - Send response message
 
-#### Flow description
+## Flow description
 Firstly Client and Server establishing connection. Then Client sends Request chain with request data.
 Server answers by sending message to client with response data.
 
@@ -32,49 +32,49 @@ Server answers by sending message to client with response data.
               <----------------------- Response chain
 
 
-#### Connection
+## Connection
 Clients establish a TCP (see RFC 793) connection with a server and communicate with text messages.
 
-##### Messages
+### Messages
 Messages are consist of **status line**, **header** and **body**. 
 
 Messages are different between Client and Server, but structure of message is immutable.
 
-###### Server
-####### Status line
+#### Server
+##### Status line
 Status line consists of *status code*, *reason phrase*.
 
 `Status-line = Status-code SP Reason-phrase CRLF`
 
-####### Header
+##### Header
 Header contains **authentication token**.
 
 **authentication token** used to store information about authentication.
 
 `Header = Authentication-token CRLF`
 
-####### Body
+##### Body
 Body contains **response data**. 
 
 `Body = Response-data CRLF`
 
-###### Client
-####### Status line
+#### Client
+##### Status line
 Status line is empty.
 
-####### Header
+##### Header
 Header contains **authentication token**. 
 
 **authentication token** used to store information about authentication.
 
 `Header = Authentication-token CRLF`
 
-####### Body
+##### Body
 Body contains request data. 
 
 `Body = Request-data CRLF`
 
-#### Status code and reason phrase
+## Status code and reason phrase
 Status code and reason phrase reflect what the consequences request message was lead to.
 
 Possible Status codes and reason phrases are below:
