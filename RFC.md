@@ -16,6 +16,7 @@ The system is an immediate chat. It consists server and client.
 - Set username
 - Send private message
 - Send broadcast message
+- Poll from incoming messages
 
 ### Server
 - Send response message
@@ -81,10 +82,8 @@ Possible Status codes and reason phrases are below:
 - "200"; OK
 - "304"; Not Modified
 - "400"; Bad Request
-- "401"; Unauthorized
-- "403"; Forbidden
 - "404"; Not Found
-- "418"; 'I'm a tea pocket'
+- "418"; 'I'm a tea polcket'
 - "500"; Internal Server Error
 - "501"; Not Implemented
 - "502"; Bad Gateway
