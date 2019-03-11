@@ -6,9 +6,6 @@ In production
 # Purpose
 This document specifies a chat protocol for the 13 group FAMCS BSU
 
-# Terminology
-
-
 # General overview
 ## System description
 The system API based on REST API.
