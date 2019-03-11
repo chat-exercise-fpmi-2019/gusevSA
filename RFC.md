@@ -1,7 +1,7 @@
 # Chat protocol -- CP/0.0.0
 
 # Status of this Memo
-In production
+In development
 
 # Purpose
 This document specifies a chat protocol for the 13 group FAMCS BSU
