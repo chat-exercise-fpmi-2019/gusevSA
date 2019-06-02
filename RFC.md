@@ -13,7 +13,7 @@ The system is an immediate chat. It consists server and client.
 
 ## Semantic convention
 
-Describing messages we will apply following semantic conventeions:
+Describing messages we will apply following semantic conventions:
 
 - Special symbols like SP and CRLF are represented with appropriate symbols.
 - Interpolation of strings is represented with __#{__ string-to-interpolate __}__ symbols.
@@ -21,12 +21,12 @@ Describing messages we will apply following semantic conventeions:
 ## Available commands 
 ### Client
 
-- Set username
-- Send private message
-- Send broadcast message
-- Poll from incoming messages
+- Set _username_
+- Send _private_ message
+- Send _broadcast_ message
 
 ### Server
+
 - Send _response_ message
 - Send _error_ message
 - Send _info_ message
@@ -40,7 +40,14 @@ Server answers by sending message to client with response data.
               <----------------------- Response chain
 
 ## Connection
+
 Clients establish a TCP (see RFC 793) connection with a server and communicate with text messages.
+
+Connection establishment features:
+
+- Three-way handshake: SYN, SYN-ACK, ACK.
+
+Connection termination carried out using FIN bashes that let server know about connection termination.
 
 ### Entities
 
@@ -215,6 +222,48 @@ It is used corresponding all requests excluding `Auth` request. This flow is pre
 
 ### Client messages
 
+
+#### Auth
+
+`Auth` message is used in purpose of determining if the user is who he 'says' he is. If request passed successfully, server return _authentication token_, that will by passed to all other requests by the user in appropriate header rule `Auth`.
+
+It should match following rules. Restrictions:
+
+- Body is presented by _nickname_ string and _password_ string.
+- _username_
+  - _username_. It must have appropriate length as mentioned in the header rule _Content-length_.
+  - _username_ must match _username_ restrictions described above.
+- _password_
+  - _password_ must be shorter then 64 symbols and wider then 12 symbol.
+  - _password_ must consist of at least:
+    - 1 number.
+    - 1 latin letter in upper case.
+    - 1 latin letter in lower case.
+    - 1 special symbol: `+`, `-`, `*`, `/`, `\`, `@`, `#`, `$`, `!`, `.`, `,`, `;`, `=`, `_`.
+- CRLF symbol finishes rule.
+
+Example:
+
+```http
+Auth
+Content-length: 18
+
+SanyaNagibator777
+12345678Aa+
+
+```
+
+Possible responses:
+
+- _username_ is valid.
+  - _password_ is valid.
+    - _username_ exists in database.
+      - _password_ matches _username_. Server responses with status code `200` and following body string : `${Authentication token}`.
+      - _password_ mismatches _username_. Server responses with status code `401` and following body string : `Username or password are wrong.`.
+    - _username_ does not exist. Server responses with status code `401` and following body string : `Username is wrong.`.
+  - _password_ is not valid. Server responses with status code `400` and following body string : `Password is invalid.`.
+- _username_ is not invalid. Server responses with status code `400` and following body string : `Username is invalid.`.
+
 #### Set-name
 
 `Set-name` message is used in purpose of setting new username to the user.
@@ -276,8 +325,8 @@ Possible responses:
 
 - _recipient username_ is valid.
   - _message_ is valid.
-    - _message_ is send successfully. Server responses with status code `200` and void body.
-    - _message_ is send unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
+    - _message_ is sent successfully. Server responses with status code `200` and void body.
+    - _message_ is sent unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
   - _message_ is invalid. Server responses with status code `400` and following body string : `Message is invalid.`.
 - _recipient username_ is invalid. Server responses with status code `400` and following body string : `Recipient username is invalid.`.
 
@@ -296,7 +345,8 @@ It should match following rules. Restrictions:
 Example:
 
 ```http
-Private-message
+200 OK
+Broadcast-message
 Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
 Content-length: 42
 
@@ -307,6 +357,30 @@ Hello, go v dotky poigraem. ╲( ͡° ͜ʖ ͡°)╱
 Possible responses:
 
 - _message_ is valid.
-  - _message_ is send successfully. Server responses with status code `200` and void body.
-  - _message_ is send unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
+  - _message_ is sent successfully. Server responses with status code `200` and void body.
+  - _message_ is sent unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
 - _message_ is invalid. Server responses with status code `400` and following body string : `Message is invalid.`.
+
+### Server messages
+
+#### Incoming-message
+
+`Incoming-message` message is used in purpose of sending derived message to user.
+
+It should match following rules. Restrictions:
+
+- Body is represented by user _message_.
+- It must have appropriate length as mentioned in the header rule _Content-length_.
+- _message_ must be shorter then 2048 symbols and wider then 1 symbol.
+- _message_ can consist of any UTF-8 characters.
+- _message_ finishes by a CRLF symbol.
+
+Example:
+
+```http
+Incoming-message
+Content-length: 42
+
+Hello, go v dotky poigraem. ╲( ͡° ͜ʖ ͡°)╱
+
+```
