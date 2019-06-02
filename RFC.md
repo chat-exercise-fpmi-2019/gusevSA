@@ -1,4 +1,4 @@
-# Chat protocol -- CP/0.0.0
+# Chat protocol -- CP/0.1.0
 
 # Status of this Memo
 In development
@@ -20,6 +20,7 @@ Describing messages we will apply following semantic conventeions:
 
 ## Available commands 
 ### Client
+
 - Set username
 - Send private message
 - Send broadcast message
@@ -38,12 +39,31 @@ Server answers by sending message to client with response data.
        Client ----------------Connection------------- Server
               <----------------------- Response chain
 
-
 ## Connection
 Clients establish a TCP (see RFC 793) connection with a server and communicate with text messages.
 
+### Entities
+
+Chat entities are represented below:
+
+- User
+  - Username
+- Message
+  - Status line (only server message)
+  - Type of query
+  - Header
+  - Empty line
+  - Body
+
+_Username_ restrictions:
+
+- _username_ must be shorter then 64 symbols and wider then 1 symbol.
+- _username_ must consist of only numbers and latin letters in any case.
+
+_Message_ restrictions are shown below.
+
 ### Messages
-Messages are consist of **status line**, **header** and **body**.
+Messages are consist of **status line**, **query type**, **header** and **body**.
 
 All text MUST be encoded as UTF-8 (RFC 3629) for network transmission.
 
@@ -54,6 +74,7 @@ Messages are different between Client and Server, but structure of message is im
 General message structure:
 
 - A status line.
+- Query type.
 - Optional header fields followed by CRLF. Header fields start from _header rule_, then follows comma _:_, and then _rule value_: `#{Header rule}: #{Header value} CRLF`. Example:
 
 ```http
@@ -71,6 +92,10 @@ Status line consists of *status code*, *reason phrase*.
 
 `Status-line = #{Status-code} SP #{Reason-phrase} CRLF`
 
+Restrictions:
+
+- *Status code* ans *reason phrase* should be only as shown in chapter _Status code and reason phrase_. Any other variants will be considered as incorrect.
+
 Example:
 
 ```http
@@ -78,42 +103,89 @@ Example:
 
 ```
 
+##### Type of query
+
+It contains only from one word, that represents type of query, followed by CRLF symbols.
+
+Restrictions:
+
+- *Type of query* should be only as shown in following chapters. Any other variants will be considered as incorrect.
+
+Example:
+
+```http
+Set-name
+
+```
+
 ##### Header
 
-Header contains **authentication token**.
+###### Authentication token
 
 **authentication token** used to store information about authentication.
 
-`Header = Auth: #{Authentication-token} CRLF`
+`Auth: #{Authentication-token} CRLF`
 
 Example:
-Authenticational token represented by string `Hello, I'm authentication token!` encoded by B64.
+Authentication token represented by string `Hello, I'm authentication token!` encoded by B64. 
+
+Restrictions:
+
+- It must be shorter then 2048 symbols and wider then 1 symbol.
+- It must consist of only numbers and latin in any case letters.
+- Allowed special symbols like `=`, `:`, `;`, `,`, `.` etc.
 
 ```http
 Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
 
 ```
 
+###### Length of body content
+
+It's a number that represents length of body including all the symbols in body.
+
+Restrictions:
+
+- _Length of body content_ must consist only of numbers in decimal number system.
+- Minimal value is 0 if body is void
+- Maximum value is 2048.
+
+`Content-length: #{Length-of-body-content} CRLF`
+
+Example:
+
+```http
+Content-length: 335
+
+```
+
 ##### Body
 Body contains **response data**.
+
+Restrictions:
+
+- Different corresponding to each query type. See next chapters.
 
 `Body = #{Response-data} CRLF`
 
 #### Client
-##### Status line
-Status line is empty.
 
 ##### Header 
-Header contains **authentication token**.
+Header contains **authentication token**, **query type** and **length of body content**.
 
-Authentication token string is the same with corresponding string on the server.
+_Authentication token string_, and _Length of body content_ are the same with corresponding strings on the server.
 
 ##### Body
 Body contains request data.
 
 `Body = #{Request-data} CRLF`
 
+Restrictions:
+
+- Different corresponding to each query type. See next chapters.
+
 ## Status code and reason phrase
+
 Status code and reason phrase reflect what the consequences request message was lead to.
 
 Possible Status codes and reason phrases are below:
@@ -123,8 +195,118 @@ Possible Status codes and reason phrases are below:
 - "200"; OK
 - "304"; Not Modified
 - "400"; Bad Request
+- "401"; Unauthorized
 - "404"; Not Found
-- "418"; 'I'm a tea polcket'
+- "418"; 'I'm a tea pocket'
 - "500"; Internal Server Error
 - "501"; Not Implemented
 - "502"; Bad Gateway
+
+### Default request handling
+
+It is used corresponding all requests excluding `Auth` request. This flow is presented follow:
+
+- _request_ semantically valid
+  - _auth token_ is valid.
+    - _Content-length_ is valid.
+      - Request handling corresponding request type.
+  - _auth token_ is invalid. Server responses with status code `401` and void body.
+- _request_ semantically invalid. Server responses with status code `400` and void body.
+
+### Client messages
+
+#### Set-name
+
+`Set-name` message is used in purpose of setting new username to the user.
+
+It should match following rules. Restrictions:
+
+- New _username_. It must have appropriate length as mentioned in the header rule _Content-length_.
+- _username_ must match _username_ restrictions described above.
+- CRLF symbol finishes rule.
+
+Example:
+
+```http
+Set-name
+Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
+Content-length: 18
+
+SanyaNagibator777
+
+```
+
+Possible responses:
+
+- _username_ is valid.
+  - _username_ is unique. Server responses with status code `200` and void body.
+  - _username_ is non-unique. Server responses with status code `400` and following body string : `Username is not unique.`.
+- _username_ is invalid. Server responses with status code `400` and following body string : `Username is invalid.`.
+
+#### Private-message
+
+`Private-message` message is used in purpose of private sending message to a user.
+
+It should match following rules. Restrictions:
+
+- Body is represented by _recipient username_ and user _message_.
+- All body must have appropriate length as mentioned in the header rule _Content-length_.
+- Message starts with _recipient username_.
+  - _recipient username_ must match _username_ restrictions as was mentioned above.
+- CRLF symbol.
+- Then follows _message_.
+  - _message_ must be shorter then 2048 symbols and wider then 1 symbol.
+  - _message_ can consist of any UTF-8 characters.
+  - _message_ finishes by a CRLF symbol.
+
+Example:
+
+```http
+Private-message
+Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
+Content-length: 60
+
+SanyaNagibator777
+Hello, go v dotky poigraem.
+╲( ͡° ͜ʖ ͡°)╱
+
+```
+
+Possible responses:
+
+- _recipient username_ is valid.
+  - _message_ is valid.
+    - _message_ is send successfully. Server responses with status code `200` and void body.
+    - _message_ is send unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
+  - _message_ is invalid. Server responses with status code `400` and following body string : `Message is invalid.`.
+- _recipient username_ is invalid. Server responses with status code `400` and following body string : `Recipient username is invalid.`.
+
+#### Broadcast-message
+
+`Broadcast-message` message is used in purpose of sending message to all users.
+
+It should match following rules. Restrictions:
+
+- Body is represented by user _message_.
+- It must have appropriate length as mentioned in the header rule _Content-length_.
+- _message_ must be shorter then 2048 symbols and wider then 1 symbol.
+- _message_ can consist of any UTF-8 characters.
+- _message_ finishes by a CRLF symbol.
+
+Example:
+
+```http
+Private-message
+Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
+Content-length: 42
+
+Hello, go v dotky poigraem. ╲( ͡° ͜ʖ ͡°)╱
+
+```
+
+Possible responses:
+
+- _message_ is valid.
+  - _message_ is send successfully. Server responses with status code `200` and void body.
+  - _message_ is send unsuccessfully. Server responses with status code `400` and following body string : `Message has been sent unsuccessfully.`.
+- _message_ is invalid. Server responses with status code `400` and following body string : `Message is invalid.`.
