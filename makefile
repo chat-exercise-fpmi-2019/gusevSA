@@ -1,6 +1,6 @@
 all: server.o client.o
-	g++ server.o -o server
-	# g++ client.o -o client
+	g++ server.o -o ./bin/server
+	# g++ client.o -o ./bin/client
 
 server.o: server.c
 	g++ -c server.c
