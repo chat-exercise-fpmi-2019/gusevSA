@@ -353,7 +353,6 @@ It should match following rules. Restrictions:
 Example:
 
 ```http
-200 OK
 Broadcast-message
 Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
 Content-length: 42
