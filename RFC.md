@@ -349,7 +349,7 @@ It should match following rules. Restrictions:
 - _message_ must be shorter then 2048 symbols and wider then 1 symbol.
 - _message_ can consist of any UTF-8 characters.
 - _message_ finishes by a CRLF symbol.
-
+unnecessary
 Example:
 
 ```http
