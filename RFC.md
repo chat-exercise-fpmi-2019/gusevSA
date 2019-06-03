@@ -6,7 +6,7 @@ In development
 
 # Purpose
 
-This document specifies a chat protocol for the 13 group FAMCS BSU
+This document specifies a chat protocol for the 13 group FAMCS BSU.
 
 # General overview
 
