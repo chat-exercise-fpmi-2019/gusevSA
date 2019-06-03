@@ -1,13 +1,17 @@
-# Chat protocol -- CP/0.1.0
+# Chat protocol -- CP/0.1.1
 
-# Status of this Memo
+## Status of this Memo
+
 In development
 
 # Purpose
+
 This document specifies a chat protocol for the 13 group FAMCS BSU
 
 # General overview
+
 ## System description
+
 The system API based on REST API.
 The system is an immediate chat. It consists server and client.
 
@@ -18,20 +22,22 @@ Describing messages we will apply following semantic conventions:
 - Special symbols like SP and CRLF are represented with appropriate symbols.
 - Interpolation of strings is represented with __#{__ string-to-interpolate __}__ symbols.
 
-## Available commands 
+## Available commands
+
 ### Client
 
-- Set _username_
-- Send _private_ message
-- Send _broadcast_ message
+- Authenticate user - `Auth`
+- Set _username_ - `Set-name`
+- Send _private_ message - `Private-message`
+- Send _broadcast_ message `Broadcast-message`
 
 ### Server
 
-- Send _response_ message
-- Send _error_ message
-- Send _info_ message
+- Send _response_ / _error_ message to requested user
+- Send _message_ to appropriate user. `Incoming-message`
 
 ## Flow description
+
 Firstly Client and Server establishing connection. Then Client sends Request chain with request data.
 Server answers by sending message to client with response data.
 
@@ -70,6 +76,7 @@ _Username_ restrictions:
 _Message_ restrictions are shown below.
 
 ### Messages
+
 Messages are consist of **status line**, **query type**, **header** and **body**.
 
 All text MUST be encoded as UTF-8 (RFC 3629) for network transmission.
@@ -93,6 +100,7 @@ Auth: SGVsbG8sIEknbSBhdXRoZW50aWNhdGlvbiB0b2tlbiE=
 - Optional message body
 
 #### Server
+
 ##### Status line
 
 Status line consists of *status code*, *reason phrase*.
@@ -178,6 +186,7 @@ Restrictions:
 #### Client
 
 ##### Header 
+
 Header contains **authentication token**, **query type** and **length of body content**.
 
 _Authentication token string_, and _Length of body content_ are the same with corresponding strings on the server.
@@ -221,7 +230,6 @@ It is used corresponding all requests excluding `Auth` request. This flow is pre
 - _request_ semantically invalid. Server responses with status code `400` and void body.
 
 ### Client messages
-
 
 #### Auth
 
